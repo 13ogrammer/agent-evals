@@ -67,7 +67,13 @@ export async function runAgent(userMessage: string) {
 
   const second = await ollama.chat({
     model: MODEL,
-    messages
+    messages: [
+      {
+        role: 'system',
+        content: 'You must ONLY mention flights, prices, and times that appear explicitly in the tool results above. Do NOT invent additional flights, airlines, prices, or times under any circumstances. If only one flight was returned, present only that one flight.'
+      },
+      ...messages
+    ]
   })
 
   return { finalAnswer: second.message.content, toolCalls: executedCalls };
