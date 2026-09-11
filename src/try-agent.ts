@@ -1,8 +1,8 @@
 import {runAgent} from './agent.js';
 
 async function main() {
-  const response = await runAgent("Search for flights from NYC to LA");
-  console.log(response);
+  const result = await runAgent('I want to fly from NYC to LA, what are my options?');
+  console.log(JSON.stringify(result, null, 2));
 }
 
 await main();
