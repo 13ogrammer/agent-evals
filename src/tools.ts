@@ -1,3 +1,7 @@
+import {z} from 'zod';
+
+
+
 export function searchFlights(origin: string, destination: string) {
   const fakeRoutes: Record<string, string> = {
     'nyc-la': 'Delta DL123, 6h flight, $320, departs 8:00 AM',
@@ -87,8 +91,49 @@ export const tools = [
   }
 ]
 
+const searchFlightsSchema = z.object({
+  origin: z.string().min(1),
+  destination: z.string().min(1)
+});
+
+const convertCurrencySchema = z.object({
+  amount: z.number().min(0),
+  toCurrency: z.string().min(1)
+});
+
+const checkVisaRequirementSchema = z.object({
+  nationality: z.string().min(1),
+  destination: z.string().min(1)
+});
+
+function validateArgs<T>(schema: z.ZodType<T>, args: unknown, toolName: string): T | string {
+  const result = schema.safeParse(args);
+  if (!result.success) {
+    const issues = result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('; ');
+    return `Error: ${toolName} received invalid arguments (${issues})`;
+  }
+  return result.data;
+}
+
 export const toolFunctions: Record<string, (args: any) => string> = {
-  search_flights: (args) => searchFlights(args.origin, args.destination),
-  convert_currency: (args) => convertCurrency(args.amount, args.toCurrency),
-  check_visa_requirement: (args) => checkVisaRequirement(args.nationality, args.destination)
+  search_flights: (args) => {
+    const parsed = validateArgs(searchFlightsSchema, args, 'search_flights');
+    if (typeof parsed === 'string') return parsed;
+
+    return searchFlights(parsed.origin, parsed.destination);
+  },
+
+  convert_currency: (args) => {
+    const parsed = validateArgs(convertCurrencySchema, args, 'convert_currency');
+    if (typeof parsed === 'string') return parsed;
+
+    return convertCurrency(parsed.amount, parsed.toCurrency);
+  },
+
+  check_visa_requirement: (args) => {
+    const parsed = validateArgs(checkVisaRequirementSchema, args, 'check_visa_requirement');
+    if (typeof parsed === 'string') return parsed;
+    
+    return checkVisaRequirement(parsed.nationality, parsed.destination);
+  }
 }

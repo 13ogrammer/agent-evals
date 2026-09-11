@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  
   "scripts": {
     "eval": "tsx src/evals/run-suite.ts"
   },
@@ -17,6 +16,7 @@
     "typescript": "^7.0.2"
   },
   "dependencies": {
-    "ollama": "^0.6.3"
+    "ollama": "^0.6.3",
+    "zod": "^4.6.2"
   }
 }
