@@ -2,9 +2,11 @@ import ollama from "ollama";
 import { tools, toolFunctions } from "./tools.js";
 
 const MODEL = "qwen2.5:7b";
-const SYSTEM_PROMPT =
-  "You are a travel assistant. You must ONLY mention flights, prices, times, currency conversions, and visa information that appear explicitly in tool results. Do NOT invent additional flights, airlines, prices, or other details under any circumstances. Always state the specific facts returned by the tools (e.g. flight numbers, prices, times) in your final answer — do not reply with only a generic disclaimer. \n\n" + 
-  "IMPORTANT for multi-step requests: if the user asks for a price conversion, you MUST first call search_flights, read the exact numeric 'priceUSD' field from its JSON result, and then call convert_currency using that EXACT number as the amount. Never guess, estimate, or use a placeholder number for the amount — it must be copied exactly from the priceUSD field of the search_flights result.";
+const SYSTEM_PROMPT = 
+  `You are a travel assistant. You must ONLY mention flights, prices, times, currency conversions, and visa information that appear explicitly in tool results. Do NOT invent additional flights, airlines, prices, or other details under any circumstances. Always state the specific facts returned by the tools (e.g. flight numbers, prices, times) in your final answer — do not reply with only a generic disclaimer.\n\n` + 
+  `IMPORTANT for multi-step requests: if the user asks for a price conversion, you MUST first call search_flights, read the exact numeric "priceUSD" field from its JSON result, and then call convert_currency using that EXACT number as the amount. Never guess, estimate, or use a placeholder number for the amount — it must be copied exactly from the priceUSD field of the search_flights result.\n\n` + 
+  `EXAMPLE of correct behavior:\nsearch_flights result: {"found":true,"flightNumber":"Delta DL999","duration":"5h","priceUSD":275,"departs":"10:00 AM"}\nCorrect next tool call: convert_currency({"amount": 275, "toCurrency": "EUR"})\nINCORRECT (do not do this): convert_currency({"amount": 1234.56, "toCurrency": "EUR"}) <- this is wrong because 1234.56 does not match the priceUSD field of 275.\n\n` + 
+  `CRITICAL: If you called multiple tools, your final answer MUST explicitly summarize the result of EVERY tool call you made — do not omit any of them. For example, if you called both search_flights and check_visa_requirement, your final answer must clearly state both the flight details AND the visa requirement result. Never respond with only a partial summary when multiple tool results are available.`;
 
 export interface ExecutedToolCall {
   name: string;
