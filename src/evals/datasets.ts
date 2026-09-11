@@ -24,6 +24,7 @@ export interface TestCase {
   id: string;
   input: string;
   expectedTrajectory: TrajectoryExpectation;
+  requiredAnswerContains: (string | string[])[];
 }
 
 export const testCases: TestCase[] = [
@@ -36,6 +37,7 @@ export const testCases: TestCase[] = [
         { tool: "search_flights", args: { origin: "NYC", destination: "LA" } },
       ],
     },
+    requiredAnswerContains: ["DL123", "320"],
   },
   {
     id: "nyc-paris-currency",
@@ -59,7 +61,7 @@ export const testCases: TestCase[] = [
             );
             if (!searchCall) return null; // already flagged as missing elsewhere
 
-            let expectedAmount:number;
+            let expectedAmount: number;
             try {
               const parsed = JSON.parse(searchCall.result);
               expectedAmount = parsed.priceUSD;
@@ -67,17 +69,18 @@ export const testCases: TestCase[] = [
               return `Could not parse search_flights result as JSON: ${searchCall.result}`;
             }
 
-            if (typeof expectedAmount !== "number") return null
+            if (typeof expectedAmount !== "number") return null;
 
             if (call.args.amount !== expectedAmount) {
               return `convert_currency amount was ${call.args.amount}, expected ${expectedAmount} (from search_flights priceUSD)`;
             }
-            
+
             return null;
           },
         },
       ],
     },
+    requiredAnswerContains: ["610", "EUR"],
   },
   {
     id: "visa-and-flight",
@@ -87,6 +90,7 @@ export const testCases: TestCase[] = [
       expectedTools: ["search_flights", "check_visa_requirement"],
       // no requiredOrder: these two are independent, either order is fine
     },
+    requiredAnswerContains: ["AF456", "visa"],
   },
   {
     id: "all-three-chained",
@@ -101,5 +105,29 @@ export const testCases: TestCase[] = [
       ],
       requiredOrder: [["search_flights", "convert_currency"]],
     },
+    requiredAnswerContains: ["visa", "EUR"],
+  },
+  {
+    id: "no-route",
+    input: "Any flights from Chicago to Miami?",
+    expectedTrajectory: {
+      expectedTools: ["search_flights"],
+      argChecks: [
+        {
+          tool: "search_flights",
+          args: { origin: "Chicago", destination: "Miami" },
+        },
+      ],
+    },
+    requiredAnswerContains: [
+      [
+        "no direct",
+        "not found",
+        "no flights",
+        "unable to find",
+        "couldn't find",
+        "no available",
+      ],
+    ],
   },
 ];

@@ -2,6 +2,7 @@ import { runAgent } from "../agent.js";
 import { testCases } from "./datasets.js";
 import { checkGroundedness } from "./groundedness.js";
 import { checkTrajectory } from "./trajectory.js";
+import { checkCompleteness } from "./completeness.js";
 
 const RUNS_PER_CASE = 5;
 
@@ -9,6 +10,7 @@ interface CaseSummary {
   id: string;
   groundednessPassRate: number;
   trajectoryPassRate: number;
+  completenessPassRate: number;
   overallPassRate: number;
   sampleFailureReasons: string[];
 }
@@ -19,6 +21,7 @@ async function main() {
   for (const tc of testCases) {
     let groundedPasses = 0;
     let trajectoryPasses = 0;
+    let completenessPasses = 0;
     let overallPasses = 0;
     const sampleFailureReasons: string[] = [];
 
@@ -36,10 +39,15 @@ async function main() {
         result.toolCalls,
         tc.expectedTrajectory,
       );
+      const completenessCheck = checkCompleteness(
+        result.finalAnswer,
+        tc.requiredAnswerContains,
+      );
 
       if (groundCheck.pass) groundedPasses++;
       if (trajCheck.pass) trajectoryPasses++;
-      if (groundCheck.pass && trajCheck.pass) overallPasses++;
+      if (completenessCheck.pass) completenessPasses++;
+      if (groundCheck.pass && trajCheck.pass && completenessCheck.pass) overallPasses++;
 
       const runReasons = [
         ...(groundCheck.pass
@@ -48,13 +56,16 @@ async function main() {
         ...(trajCheck.pass
           ? []
           : trajCheck.reasons.map((r) => `trajectory: ${r}`)),
+        ...(completenessCheck.pass
+          ? []
+          : [`completeness: missing ${completenessCheck.missing.join(", ")}`]),
       ];
 
       if (runReasons.length > 0 && sampleFailureReasons.length < 3) {
         sampleFailureReasons.push(`run ${i + 1}: ${runReasons.join(" | ")}`);
       }
 
-      process.stdout.write(groundCheck.pass && trajCheck.pass ? "." : "x");
+      process.stdout.write(groundCheck.pass && trajCheck.pass && completenessCheck.pass ? "." : "x");
     }
     console.log("");
 
@@ -62,6 +73,7 @@ async function main() {
       id: tc.id,
       groundednessPassRate: (groundedPasses / RUNS_PER_CASE) * 100,
       trajectoryPassRate: (trajectoryPasses / RUNS_PER_CASE) * 100,
+      completenessPassRate: (completenessPasses / RUNS_PER_CASE) * 100,
       overallPassRate: (overallPasses / RUNS_PER_CASE) * 100,
       sampleFailureReasons,
     });
@@ -72,6 +84,7 @@ async function main() {
     console.log(`\n${s.id}`);
     console.log(`  Groundedness: ${s.groundednessPassRate.toFixed(0)}%`);
     console.log(`  Trajectory:   ${s.trajectoryPassRate.toFixed(0)}%`);
+    console.log(`  Completeness: ${s.completenessPassRate.toFixed(0)}%`);
     console.log(`  Overall:      ${s.overallPassRate.toFixed(0)}%`);
     if (s.sampleFailureReasons.length > 0) {
       console.log(`  Sample failures:`);
