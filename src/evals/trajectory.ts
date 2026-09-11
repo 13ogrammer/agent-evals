@@ -1,4 +1,4 @@
-import type { ExpectedToolCall } from "./datasets.js";
+import type { ActualToolCallForCheck, TrajectoryExpectation } from "./datasets.js";
 
 export interface ActualToolCall {
   name: string;
@@ -10,46 +10,73 @@ export interface TrajectoryResult {
   reasons: string[];
 }
 
-function argsMatch(
-  actual: Record<string, any>,
-  expected: Record<string, string>,
-): boolean {
+function staticArgsMatch(actual: Record<string, any>, expected: Record<string, any>): boolean {
   return Object.entries(expected).every(([key, expectedVal]) => {
     const actualVal = actual[key];
-    if (typeof actualVal !== "string") return false;
+    if (actualVal === undefined) return false;
 
-    return actualVal.toLowerCase() === expectedVal.toLowerCase();
-  });
+    return String(actualVal).toLowerCase() === String(expectedVal).toLowerCase();
+  })
 }
 
 export function checkTrajectory(
-  actual: ActualToolCall[],
-  expected: ExpectedToolCall[],
+  actual: ActualToolCallForCheck[],
+  expected: TrajectoryExpectation,
 ): TrajectoryResult {
   const reasons: string[] = [];
+  const actualNames = actual.map((call) => call.name);
+  const actualSet = new Set(actualNames);
+  const expectedSet = new Set(expected.expectedTools);
 
-  if (actual.length !== expected.length) {
-    reasons.push(
-      `Expected ${expected.length} tool calls, but got ${actual.length}`,
-    );
-    return { pass: false, reasons };
+  // 1. Set match: nothing missing, nothing extra
+  for (const tool of expectedSet) {
+    if (!actualSet.has(tool)) {
+      reasons.push(`Missing expected tool call: "${tool}"`);
+    }
   }
 
-  for (let i = 0; i < expected.length; i++) {
-    const exp = expected[i]!;
-    const act = actual[i]!;
+  for (const tool of actualSet) {
+    if (!expectedSet.has(tool)) {
+      reasons.push(`Unexpected tool call: "${tool}"`);
+    }
+  }
 
-    if (act.name !== exp.name) {
-      reasons.push(
-        `Step ${i}: expected tool "${exp.name}", but got "${act.name}"`,
-      );
-      continue;
+  // 2. Duplicate check
+  if (!expected.allowedDuplicates) {
+    const seen = new Set<string>();
+    for (const name of actualNames) {
+      if (seen.has(name)) {
+        reasons.push(`Tool "${name}" was called more than once (redundant)`);
+      } else {
+        seen.add(name);
+      }
+    }
+  }
+
+  // 3. Order constraints
+  for (const [before, after] of expected.requiredOrder ?? []) {
+    const beforeIdx = actualNames.indexOf(before);
+    const afterIdx = actualNames.indexOf(after);
+
+    if (beforeIdx === -1 || afterIdx === -1) continue
+
+    if (beforeIdx > afterIdx) {
+      reasons.push(`Expected "${before}" before "${after}", but order was reversed`);
+    }
+  }
+
+  // 4. Static argument match
+  for (const check of expected.argChecks ?? []) {
+    const call = actual.find(c => c.name === check.tool);
+    if (!call) continue
+
+    if(check.args && !staticArgsMatch(call.args, check.args)) {
+      reasons.push(`"${check.tool}" args mismatch. Expected ${JSON.stringify(check.args)}, got ${JSON.stringify(call.args)}`);
     }
 
-    if (!argsMatch(act.args, exp.args)) {
-      reasons.push(
-        `Step ${i}: args mismatch. Expected ${JSON.stringify(exp.args)}, but got ${JSON.stringify(act.args)}`,
-      );
+    if (check.validate) {
+      const error = check.validate(call, actual)
+      if (error) reasons.push(error)
     }
   }
 
