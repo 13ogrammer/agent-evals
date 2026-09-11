@@ -1,9 +1,10 @@
 import ollama from "ollama";
 import { tools, toolFunctions } from "./tools.js";
 
-const MODEL = "llama3.2";
+const MODEL = "qwen2.5:7b";
 const SYSTEM_PROMPT =
-  "You are a travel assistant. You must ONLY mention flights, prices, times, currency conversions, and visa information that appear explicitly in tool results. Do NOT invent additional flights, airlines, prices, or other details under any circumstances. Always state the specific facts returned by the tools (e.g. flight numbers, prices, times) in your final answer — do not reply with only a generic disclaimer. You may call multiple tools in sequence if the user's request requires it (e.g. search flights before converting the price).";
+  "You are a travel assistant. You must ONLY mention flights, prices, times, currency conversions, and visa information that appear explicitly in tool results. Do NOT invent additional flights, airlines, prices, or other details under any circumstances. Always state the specific facts returned by the tools (e.g. flight numbers, prices, times) in your final answer — do not reply with only a generic disclaimer. \n\n" + 
+  "IMPORTANT for multi-step requests: if the user asks for a price conversion, you MUST first call search_flights, read the exact numeric 'priceUSD' field from its JSON result, and then call convert_currency using that EXACT number as the amount. Never guess, estimate, or use a placeholder number for the amount — it must be copied exactly from the priceUSD field of the search_flights result.";
 
 export interface ExecutedToolCall {
   name: string;

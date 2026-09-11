@@ -59,12 +59,18 @@ export const testCases: TestCase[] = [
             );
             if (!searchCall) return null; // already flagged as missing elsewhere
 
-            const priceMatch = searchCall.result.match(/\$(\d+)/);
-            if (!priceMatch) return null;
+            let expectedAmount:number;
+            try {
+              const parsed = JSON.parse(searchCall.result);
+              expectedAmount = parsed.priceUSD;
+            } catch {
+              return `Could not parse search_flights result as JSON: ${searchCall.result}`;
+            }
 
-            const expectedAmount = Number(priceMatch[1]);
+            if (typeof expectedAmount !== "number") return null
+
             if (call.args.amount !== expectedAmount) {
-              return `convert_currency amount was ${call.args.amount}, expected ${expectedAmount} (from search_flights price)`;
+              return `convert_currency amount was ${call.args.amount}, expected ${expectedAmount} (from search_flights priceUSD)`;
             }
             
             return null;
