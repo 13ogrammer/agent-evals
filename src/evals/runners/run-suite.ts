@@ -1,9 +1,9 @@
-import { runAgent } from "../agent.js";
-import { testCases } from "./datasets.js";
-import { checkGroundedness } from "./groundedness.js";
-import { checkTrajectory } from "./trajectory.js";
-import { checkCompleteness } from "./completeness.js";
-import { judgeAnswerQuality } from "./judge.js";
+import { runAgent } from "../../agent/agent.js";
+import { testCases } from "../datasets/dev.js";
+import { checkGroundedness } from "../checks/groundedness.js";
+import { checkTrajectory } from "../checks/trajectory.js";
+import { checkCompleteness } from "../checks/completeness.js";
+import { judgeAnswerQuality } from "../checks/judge.js";
 
 const RUNS_PER_CASE = 5;
 

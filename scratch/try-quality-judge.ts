@@ -1,4 +1,4 @@
-import { judgeAnswerQuality } from "./judge.js";
+import { judgeAnswerQuality } from "../src/evals/checks/judge.js";
 
 async function main() {
   const goodAnswer = await judgeAnswerQuality(

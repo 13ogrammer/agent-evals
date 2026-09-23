@@ -1,5 +1,5 @@
-import {runAgent} from '../agent.js';
-import {checkGroundedness} from './groundedness.js';
+import {runAgent} from '../src/agent/agent.js';
+import {checkGroundedness} from '../src/evals/checks/groundedness.js';
 
 async function main() {
   const userMessage = 'I want to fly from NYC to LA, what are my options?'

@@ -1,4 +1,4 @@
-import {runAgent} from './agent.js';
+import {runAgent} from '../src/agent/agent.js';
 
 async function main() {
   const result = await runAgent('I want to fly from NYC to LA, what are my options?');

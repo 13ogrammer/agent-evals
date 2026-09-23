@@ -1,6 +1,6 @@
-import { runAgent } from "../agent.js";
-import { checkCompleteness } from "./completeness.js";
-import { testCases } from "./datasets.js";
+import { runAgent } from '../src/agent/agent.js';
+import { checkCompleteness } from "../src/evals/checks/completeness.js";
+import { testCases } from "../src/evals/datasets/dev.js";
 
 async function main() {
   const tc = testCases.find(tc => tc.id === 'visa-and-flight')!;

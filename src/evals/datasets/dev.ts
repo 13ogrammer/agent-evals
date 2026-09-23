@@ -1,24 +1,5 @@
-export interface ActualToolCallForCheck {
-  name: string;
-  args: Record<string, any>;
-  result: string;
-}
+import type { TrajectoryExpectation } from "../checks/trajectory.js";
 
-export interface ArgCheck {
-  tool: string;
-  args?: Record<string, string>;
-  validate?: (
-    call: ActualToolCallForCheck,
-    allCalls: ActualToolCallForCheck[],
-  ) => string | null;
-}
-
-export interface TrajectoryExpectation {
-  expectedTools: string[];
-  requiredOrder?: [string, string][]; // [mustComeBefore, mustComeAfter] pairs
-  allowedDuplicates?: boolean;
-  argChecks?: ArgCheck[];
-}
 
 export interface TestCase {
   id: string;

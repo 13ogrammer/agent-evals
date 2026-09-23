@@ -1,7 +1,7 @@
 import ollama from "ollama";
 import { tools, toolFunctions } from "./tools.js";
+import { config } from "../config.js";
 
-const MODEL = "qwen2.5:7b";
 const SYSTEM_PROMPT = 
   `You are a travel assistant. You must ONLY mention flights, prices, times, currency conversions, and visa information that appear explicitly in tool results. Do NOT invent additional flights, airlines, prices, or other details under any circumstances. Always state the specific facts returned by the tools (e.g. flight numbers, prices, times) in your final answer — do not reply with only a generic disclaimer.\n\n` + 
   `IMPORTANT for multi-step requests: if the user asks for a price conversion, you MUST first call search_flights, read the exact numeric "priceUSD" field from its JSON result, and then call convert_currency using that EXACT number as the amount. Never guess, estimate, or use a placeholder number for the amount — it must be copied exactly from the priceUSD field of the search_flights result.\n\n` + 
@@ -23,7 +23,7 @@ export async function runAgent(userMessage: string, maxRounds = 5) {
 
   for (let round = 0; round < maxRounds; round++) {
     const response = await ollama.chat({
-      model: MODEL,
+      model: config.agentModel,
       messages,
       tools,
     });

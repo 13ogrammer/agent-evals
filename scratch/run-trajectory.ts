@@ -1,6 +1,6 @@
-import { runAgent } from "../agent.js";
-import { testCases } from "./datasets.js";
-import { checkTrajectory } from "./trajectory.js";
+import { runAgent } from '../src/agent/agent.js';
+import { testCases } from "../src/evals/datasets/dev.js";
+import { checkTrajectory } from "../src/evals/checks/trajectory.js";
 
 async function main() {
   const tc = testCases.find(tc => tc.id === 'nyc-paris-currency')!;

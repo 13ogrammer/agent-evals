@@ -1,4 +1,5 @@
 import ollama from "ollama";
+import { config } from "../../config.js";
 
 export interface JudgeResult {
   pass: boolean;
@@ -13,7 +14,6 @@ export interface QualityJudgeResult {
   reasoning: string;
 }
 
-const JUDGE_MODEL = "phi4";
 
 export async function judgeSemanticMatch(
   expected: string,
@@ -30,7 +30,7 @@ export async function judgeSemanticMatch(
   {"pass": true or false, "reasoning": "one short sentence explaining why"}`;
 
   const response = await ollama.chat({
-    model: JUDGE_MODEL,
+    model: config.judgeModel,
     messages: [{ role: "user", content: prompt }],
   });
 
@@ -73,7 +73,7 @@ export async function judgeAnswerQuality(
   {"helpful": true or false, "clear": true or false, "concise": true or false, "reasoning": "one short sentence summarizing the main issue, or why it's good"}`;
 
   const response = await ollama.chat({
-    model: JUDGE_MODEL,
+    model: config.judgeModel,
     messages: [{ role: "user", content: prompt }],
   });
 

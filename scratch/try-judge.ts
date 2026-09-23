@@ -1,4 +1,4 @@
-import { judgeSemanticMatch } from "./judge.js"
+import { judgeSemanticMatch } from "../src/evals/checks/judge.js"
 
 async function main() {
   const result = await judgeSemanticMatch(
