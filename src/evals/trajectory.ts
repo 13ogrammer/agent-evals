@@ -1,4 +1,5 @@
 import type { ActualToolCallForCheck, TrajectoryExpectation } from "./datasets.js";
+import { judgeSemanticMatch } from "./judge.js";
 
 export interface ActualToolCall {
   name: string;
@@ -10,19 +11,10 @@ export interface TrajectoryResult {
   reasons: string[];
 }
 
-function staticArgsMatch(actual: Record<string, any>, expected: Record<string, any>): boolean {
-  return Object.entries(expected).every(([key, expectedVal]) => {
-    const actualVal = actual[key];
-    if (actualVal === undefined) return false;
-
-    return String(actualVal).toLowerCase() === String(expectedVal).toLowerCase();
-  })
-}
-
-export function checkTrajectory(
+export async function checkTrajectory(
   actual: ActualToolCallForCheck[],
   expected: TrajectoryExpectation,
-): TrajectoryResult {
+): Promise<TrajectoryResult> {
   const reasons: string[] = [];
   const actualNames = actual.map((call) => call.name);
   const actualSet = new Set(actualNames);
@@ -70,8 +62,22 @@ export function checkTrajectory(
     const call = actual.find(c => c.name === check.tool);
     if (!call) continue
 
-    if(check.args && !staticArgsMatch(call.args, check.args)) {
-      reasons.push(`"${check.tool}" args mismatch. Expected ${JSON.stringify(check.args)}, got ${JSON.stringify(call.args)}`);
+    if (check.args) {
+      for (const [key, expectedVal] of Object.entries(check.args)) {
+        const actualVal = call.args[key];
+        if (actualVal === undefined) {
+          reasons.push(`"${check.tool}" missing arg "${key}"`)
+          continue
+        }
+        const judged = await judgeSemanticMatch(
+          expectedVal,
+          String(actualVal),
+          `Argument "${key}" passed to tool "${check.tool}"`
+        )
+        if (!judged.pass) {
+          reasons.push(`"${check.tool}" arg "${key}": ${judged.reasoning}`)
+        }
+      }
     }
 
     if (check.validate) {

@@ -35,7 +35,7 @@ async function main() {
         result.finalAnswer,
         toolResultTexts,
       );
-      const trajCheck = checkTrajectory(
+      const trajCheck = await checkTrajectory(
         result.toolCalls,
         tc.expectedTrajectory,
       );
