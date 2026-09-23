@@ -1,12 +1,4 @@
-import type { TrajectoryExpectation } from "../checks/trajectory.js";
-
-
-export interface TestCase {
-  id: string;
-  input: string;
-  expectedTrajectory: TrajectoryExpectation;
-  requiredAnswerContains: (string | string[])[];
-}
+import type { TestCase } from './types.js';
 
 export const testCases: TestCase[] = [
   {

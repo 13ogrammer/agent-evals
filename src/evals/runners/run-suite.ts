@@ -1,9 +1,12 @@
 import { runAgent } from "../../agent/agent.js";
-import { testCases } from "../datasets/dev.js";
+import { testCases as devCases } from "../datasets/dev.js";
+import { goldenTestCases } from "../datasets/golden.js";
 import { checkGroundedness } from "../checks/groundedness.js";
 import { checkTrajectory } from "../checks/trajectory.js";
 import { checkCompleteness } from "../checks/completeness.js";
 import { judgeAnswerQuality } from "../checks/judge.js";
+
+const DATASET = process.env.EVAL_DATASET === "golden" ? goldenTestCases : devCases;
 
 const RUNS_PER_CASE = 5;
 
@@ -20,7 +23,7 @@ interface CaseSummary {
 async function main() {
   const summaries: CaseSummary[] = [];
 
-  for (const tc of testCases) {
+  for (const tc of DATASET) {
     let groundedPasses = 0;
     let trajectoryPasses = 0;
     let completenessPasses = 0;
